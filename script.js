@@ -4,23 +4,15 @@ const LABELS = {strength:"Strength",cardio:"Cardio",stretch:"Stretch / Yoga",nut
 const $ = id => document.getElementById(id);
 
 const todayIdx = (new Date().getDay() + 6) % 7; // Mon = 0
-let tasks = [];
+let tasks = load();
 let selDay = todayIdx, filter = "all", editId = null;
 
-// ---- Server API ----
-async function api(method, url, body){
-  const r = await fetch(url, {method, headers:{"Content-Type":"application/json"}, body: body ? JSON.stringify(body) : undefined});
-  if(!r.ok) throw new Error((await r.json().catch(()=>({}))).error || "Request failed");
-  return r.json();
+function load(){
+  try { return JSON.parse(localStorage.getItem("fittasks")) || []; } catch { return []; }
 }
-function status(msg){ $("status").textContent = msg || ""; $("status").hidden = !msg; }
-async function run(fn){
-  try { await fn(); status(""); }
-  catch(e){ status("Server problem: " + e.message); }
-  render();
+function save(){
+  try { localStorage.setItem("fittasks", JSON.stringify(tasks)); } catch {}
 }
-const loadTasks = () => run(async()=>{ tasks = await api("GET","/api/tasks"); });
-const swap = u => { tasks = tasks.map(t=>t.id===u.id ? u : t); };
 
 // Setup
 $("dateLine").textContent = new Date().toLocaleDateString(undefined,{weekday:"long",day:"numeric",month:"long"});
@@ -80,12 +72,15 @@ $("taskForm").addEventListener("submit", e=>{
     day: +$("day").value
   };
   if(!data.name) return;
-  run(async()=>{
-    if(editId) swap(await api("PUT","/api/tasks/"+editId, data));
-    else tasks.push(await api("POST","/api/tasks", data));
-    selDay = data.day; resetForm(); closeSheet();
-  });
-});         
+  if(editId){
+    const t = tasks.find(t=>t.id===editId);
+    Object.assign(t, data);
+  } else {
+    tasks.push({id: Date.now().toString(36)+Math.random().toString(36).slice(2,6), done:false, ...data});
+  }
+  selDay = data.day;
+  save(); resetForm(); closeSheet(); render();
+});
 
 $("cancelBtn").addEventListener("click", ()=>{ resetForm(); closeSheet(); });
 
@@ -101,9 +96,9 @@ $("list").addEventListener("click", e=>{
   const li = e.target.closest(".item"); if(!li) return;
   const t = tasks.find(t=>t.id===li.dataset.id);
   if(e.target.matches("input[type=checkbox]")){
-    run(async()=> swap(await api("PUT","/api/tasks/"+t.id,{done:e.target.checked})));
+    t.done = e.target.checked; save(); render();
   } else if(e.target.classList.contains("del")){
-    run(async()=>{ await api("DELETE","/api/tasks/"+t.id); tasks = tasks.filter(x=>x.id!==t.id); });
+    tasks = tasks.filter(x=>x!==t); save(); render();
   } else if(e.target.classList.contains("edit")){
     editId = t.id;
     $("name").value = t.name; $("category").value = t.category;
@@ -127,18 +122,11 @@ $("days").addEventListener("click", e=>{
 $("filters").addEventListener("click", e=>{
   const b = e.target.closest("button"); if(!b) return;
   if(b.id==="clearDone"){
-    run(async()=>{
-      const ids = tasks.filter(t=>t.day===selDay && t.done).map(t=>t.id);
-      await Promise.all(ids.map(id=>api("DELETE","/api/tasks/"+id)));
-      tasks = tasks.filter(t=>!ids.includes(t.id));
-    });
-    return;
+    tasks = tasks.filter(t=>!(t.day===selDay && t.done)); save(); render(); return;
   }
   filter = b.dataset.f;
   document.querySelectorAll(".chip[data-f]").forEach(c=>c.classList.toggle("active", c===b));
   render();
 });
 
-loadTasks();
-// Pick up changes made on other devices when you come back to the tab
-document.addEventListener("visibilitychange", ()=>{ if(!document.hidden && !editId) loadTasks(); });
+render();
