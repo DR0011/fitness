@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#2447f5" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="FitTasks" />
+    <title>FitTasks – Body Fitness Task Manager</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header class="top">
+      <div>
+        <h1>FitTasks</h1>
+        <p id="dateLine" class="muted"></p>
+      </div>
+      <div class="ring-wrap" aria-label="Progress for selected day">
+        <svg viewBox="0 0 44 44" class="ring">
+          <circle cx="22" cy="22" r="18" class="ring-bg" />
+          <circle cx="22" cy="22" r="18" class="ring-fg" id="ringFg" />
+        </svg>
+        <span id="ringText">0%</span>
+      </div>
+    </header>
+
+    <main class="layout">
+      <aside class="panel" id="formPanel">
+        <div class="sheet-head">
+          <h2 id="formTitle">Add a task</h2>
+          <button type="button" class="icon sheet-close" id="closeSheet">
+            Close
+          </button>
+        </div>
+        <form id="taskForm" autocomplete="off">
+          <label
+            >Task name
+            <input
+              id="name"
+              required
+              maxlength="60"
+              placeholder="e.g. Bench press"
+            />
+          </label>
+          <label
+            >Type
+            <select id="category">
+              <option value="strength">Strength</option>
+              <option value="cardio">Cardio</option>
+              <option value="stretch">Stretch / Yoga</option>
+              <option value="nutrition">Nutrition</option>
+              <option value="water">Water</option>
+            </select>
+          </label>
+          <label
+            >Target (sets × reps, minutes, litres…)
+            <input id="target" maxlength="30" placeholder="e.g. 4 × 10" />
+          </label>
+          <label
+            >Day
+            <select id="day"></select>
+          </label>
+          <div class="row">
+            <button class="btn primary" type="submit" id="saveBtn">
+              Add task
+            </button>
+            <button class="btn" type="button" id="cancelBtn" hidden>
+              Cancel
+            </button>
+          </div>
+        </form>
+      </aside>
+
+      <section class="panel">
+        <div class="stats">
+          <div><strong id="sTotal">0</strong><span>Tasks today</span></div>
+          <div><strong id="sDone">0</strong><span>Done</span></div>
+          <div><strong id="sWeek">0</strong><span>Done this week</span></div>
+        </div>
+        <nav class="days" id="days" aria-label="Day"></nav>
+        <div class="filters" id="filters">
+          <button data-f="all" class="chip active">All</button>
+          <button data-f="todo" class="chip">To do</button>
+          <button data-f="done" class="chip">Done</button>
+          <button class="chip clear" id="clearDone">Clear done</button>
+        </div>
+        <p id="status" class="empty" hidden></p>
+        <ul id="list" class="list"></ul>
+        <p id="empty" class="empty" hidden>
+          No tasks for this day. Tap + to add one.
+        </p>
+      </section>
+    </main>
+
+    <button class="fab" id="fab" aria-label="Add task">+</button>
+    <div class="backdrop" id="backdrop"></div>
+    <script src="script.js"></script>
+  </body>
+</html>
